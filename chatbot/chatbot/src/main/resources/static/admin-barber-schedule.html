@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barber Schedules - Fade Factory Barbershop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 28px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .date-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-selector label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .date-selector input {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .barber-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .barber-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            background: #f7fafc;
+        }
+
+        .barber-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .barber-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .utilization {
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .time-slot {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .time-slot-free {
+            background: #e6fffa;
+            border-left: 3px solid #38b2ac;
+            color: #234e52;
+        }
+
+        .time-slot-booked {
+            background: #e6f2ff;
+            border-left: 3px solid #4299e1;
+            color: #2c5282;
+            cursor: pointer;
+        }
+
+        .time-slot-booked:hover {
+            background: #d6e9ff;
+        }
+
+        .time-label {
+            font-weight: 600;
+            min-width: 80px;
+        }
+
+        .booking-details {
+            flex: 1;
+            margin-left: 10px;
+        }
+
+        .service-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .customer-phone {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge-confirmed {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .badge-completed {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>📅 Barber Schedules</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="window.location.href='/admin-barbers.html'">Manage Barbers</button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/admin-dashboard.html'">Back to Dashboard</button>
+                </div>
+            </div>
+            <div class="date-selector">
+                <label for="scheduleDate">Select Date:</label>
+                <input type="date" id="scheduleDate">
+                <button class="btn btn-primary" onclick="loadSchedules()">View Schedule</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div id="schedules-container">
+                <div class="loading">Select a date to view barber schedules</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/admin';
+
+        // Initialize with today's date
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('scheduleDate').value = today;
+
+            // Check for barberId in URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            const barberId = urlParams.get('barberId');
+
+            if (barberId) {
+                // If specific barber requested, load just their schedule
+                loadSingleBarberSchedule(barberId);
+            } else {
+                // Otherwise load all barber schedules
+                loadSchedules();
+            }
+        });
+
+        // Load all barber schedules for selected date
+        async function loadSchedules() {
+            const container = document.getElementById('schedules-container');
+            const selectedDate = document.getElementById('scheduleDate').value;
+
+            if (!selectedDate) {
+                container.innerHTML = '<div class="loading">Please select a date</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="loading">Loading schedules...</div>';
+
+            try {
+                // Get all barbers
+                const barbersResponse = await fetch(`${API_BASE}/barbers`);
+                const barbers = await barbersResponse.json();
+
+                const activeBarbers = barbers.filter(b => b.active);
+
+                if (activeBarbers.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👨‍🦲</div><p>No active barbers found</p></div>';
+                    return;
+                }
+
+                // Load schedule for each barber
+                const schedulePromises = activeBarbers.map(barber =>
+                    fetch(`${API_BASE}/barbers/${barber.id}/schedule?date=${selectedDate}`)
+                        .then(res => res.json())
+                );
+
+                const schedules = await Promise.all(schedulePromises);
+
+                // Render barber grid
+                const grid = document.createElement('div');
+                grid.className = 'barber-grid';
+
+                schedules.forEach(schedule => {
+                    const card = createBarberScheduleCard(schedule);
+                    grid.appendChild(card);
+                });
+
+                container.innerHTML = '';
+                container.appendChild(grid);
+
+            } catch (error) {
+                console.error('Error loading schedules:', error);
+                container.innerHTML = '<div class="loading">Error loading schedules. Please try again.</div>';
+            }
+        }
+
+        // Load single barber schedule
+        async function loadSingleBarberSchedule(barberId) {
+            const container = document.getElementById('schedules-container');
+            const selectedDate = document.getElementById('scheduleDate').value;
+
+            container.innerHTML = '<div class="loading">Loading schedule...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/barbers/${barberId}/schedule?date=${selectedDate}`);
+                const schedule = await response.json();
+
+                const card = createBarberScheduleCard(schedule);
+                container.innerHTML = '';
+                container.appendChild(card);
+
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+                container.innerHTML = '<div class="loading">Error loading schedule. Please try again.</div>';
+            }
+        }
+
+        // Create barber schedule card
+        function createBarberScheduleCard(schedule) {
+            const card = document.createElement('div');
+            card.className = 'barber-card';
+
+            const header = document.createElement('div');
+            header.className = 'barber-header';
+            header.innerHTML = `
+                <div class="barber-name">👨‍🦲 ${schedule.barberName}</div>
+                <div class="utilization">${schedule.utilization.toFixed(0)}% utilization</div>
+            `;
+            card.appendChild(header);
+
+            // Generate time slots (9 AM to 7 PM in 30-min intervals)
+            const timeline = document.createElement('div');
+            timeline.className = 'timeline';
+
+            const startHour = 9;
+            const endHour = 19;
+            const bookingsMap = new Map(schedule.bookings.map(b => [b.startTime, b]));
+
+            for (let hour = startHour; hour < endHour; hour++) {
+                for (let minute of [0, 30]) {
+                    const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`;
+                    const displayTime = formatTime(timeStr);
+
+                    const booking = bookingsMap.get(timeStr);
+
+                    const slot = document.createElement('div');
+                    if (booking) {
+                        slot.className = 'time-slot time-slot-booked';
+                        slot.innerHTML = `
+                            <div class="time-label">${displayTime}</div>
+                            <div class="booking-details">
+                                <div class="service-name">${booking.serviceName}</div>
+                                <div class="customer-phone">${booking.customerPhone}</div>
+                            </div>
+                            <span class="badge badge-${booking.status.toLowerCase()}">${booking.status}</span>
+                        `;
+                    } else {
+                        slot.className = 'time-slot time-slot-free';
+                        slot.innerHTML = `
+                            <div class="time-label">${displayTime}</div>
+                            <div class="booking-details">Available</div>
+                        `;
+                    }
+
+                    timeline.appendChild(slot);
+                }
+            }
+
+            card.appendChild(timeline);
+
+            // Add stats row
+            const statsRow = document.createElement('div');
+            statsRow.className = 'stats-row';
+            statsRow.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${schedule.totalBookings}</div>
+                    <div class="stat-label">Total Bookings</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${schedule.utilization.toFixed(0)}%</div>
+                    <div class="stat-label">Utilization</div>
+                </div>
+            `;
+            card.appendChild(statsRow);
+
+            return card;
+        }
+
+        // Format time from HH:mm:ss to 12-hour format
+        function formatTime(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+        }
+    </script>
+</body>
+</html>

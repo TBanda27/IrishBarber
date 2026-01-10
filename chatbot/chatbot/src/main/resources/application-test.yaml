@@ -1,0 +1,98 @@
+# Test Profile - Use this for quick testing without MySQL
+# To use: mvn spring-boot:run -Dspring-boot.run.profiles=test
+
+spring:
+  application:
+    name: barbershop-booking-bot
+
+  # H2 In-Memory Database (No installation needed!)
+  datasource:
+    url: jdbc:h2:mem:barbershop_test
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # Auto-create tables on startup
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+  web:
+    resources:
+      static-locations: classpath:/static/
+      add-mappings: true
+
+  mvc:
+    favicon:
+      enabled: false
+
+
+# Barbershop Configuration (same as production)
+barbershop:
+  name: Fade Factory Barbershop
+  address: 123 Main St, Dublin
+  phone: '+353-1-234-5678'
+  whatsapp-number: 'whatsapp:+353871234567'
+
+  operating-hours:
+    opening-time: '09:00'
+    closing-time: '19:00'
+    closed-days:
+      - SUNDAY
+
+  number-of-barbers: 3
+  slot-interval-minutes: 30
+  minimum-advance-booking-hours: 2
+
+
+# Reminders (same as production)
+reminders:
+  enabled: true
+  day-before:
+    enabled: true
+    time: '18:00'
+  one-hour:
+    enabled: true
+    minutes-before: 60
+
+
+# Loyalty (same as production)
+loyalty:
+  enabled: true
+  points-per-booking: 10
+  bonus-points-for-first-booking: 50
+  milestones:
+    - 5
+    - 10
+    - 25
+    - 50
+    - 100
+  birthday:
+    enabled: true
+    bonus-points: 100
+    discount-code: 'BDAY20'
+    discount-percent: 20
+
+
+# Twilio (same as production)
+twilio:
+  account-sid: ${ACCOUNT_SID:test}
+  auth-token: ${AUTH_TOKEN:test}
+  phone-number: ${TWILIO_NUMBER:test}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.banda.barbershop: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} - %msg%n'

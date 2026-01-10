@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barbers Management - Fade Factory Barbershop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 28px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-info {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #3182ce;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #f7fafc;
+            color: #4a5568;
+            font-weight: 600;
+            text-align: left;
+            padding: 12px;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-inactive {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .rating {
+            color: #f6ad55;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #2d3748;
+            font-size: 24px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #a0aec0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👨‍🦲 Barbers Management</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="window.location.href='/admin-dashboard.html'">Back to Dashboard</button>
+                <button class="btn btn-info" onclick="window.location.href='/admin-barber-schedule.html'">View Schedules</button>
+                <button class="btn btn-primary" onclick="openCreateModal()">Add New Barber</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div id="barbers-container">
+                <div class="loading">Loading barbers...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div id="barberModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Barber</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="barberForm" onsubmit="saveBarber(event)">
+                <input type="hidden" id="barberId">
+
+                <div class="form-group">
+                    <label for="barberName">Barber Name *</label>
+                    <input type="text" id="barberName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="barberPhone">Phone Number</label>
+                    <input type="tel" id="barberPhone" placeholder="+353871234567">
+                </div>
+
+                <div class="form-group">
+                    <label for="barberBio">Bio / Description</label>
+                    <textarea id="barberBio" placeholder="Senior barber with 10 years experience..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="barberDisplayOrder">Display Order</label>
+                    <input type="number" id="barberDisplayOrder" min="0" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="barberActive">Status</label>
+                    <select id="barberActive">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Barber</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/admin';
+
+        // Load barbers on page load
+        document.addEventListener('DOMContentLoaded', loadBarbers);
+
+        // Load all barbers
+        async function loadBarbers() {
+            const container = document.getElementById('barbers-container');
+            container.innerHTML = '<div class="loading">Loading barbers...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/barbers`);
+                const barbers = await response.json();
+
+                if (barbers.length === 0) {
+                    container.innerHTML = '<div class="loading">No barbers found. Click "Add New Barber" to create one.</div>';
+                    return;
+                }
+
+                const table = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Bio</th>
+                                <th>Rating</th>
+                                <th>Bookings</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${barbers.map(barber => `
+                                <tr>
+                                    <td>${barber.displayOrder}</td>
+                                    <td><strong>${barber.name}</strong></td>
+                                    <td>${barber.phoneNumber || '-'}</td>
+                                    <td>${barber.bio ? barber.bio.substring(0, 40) + '...' : '-'}</td>
+                                    <td>
+                                        ${barber.rating ? `<span class="rating">⭐ ${barber.rating.toFixed(1)}</span>` : '-'}
+                                    </td>
+                                    <td>${barber.totalBookings} total / ${barber.completedBookings} completed</td>
+                                    <td>
+                                        <span class="badge ${barber.active ? 'badge-active' : 'badge-inactive'}">
+                                            ${barber.active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-info" onclick="viewSchedule(${barber.id})">Schedule</button>
+                                            <button class="btn btn-primary" onclick='editBarber(${JSON.stringify(barber)})'>Edit</button>
+                                            <button class="btn btn-danger" onclick="deleteBarber(${barber.id}, '${barber.name}')">Deactivate</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = table;
+            } catch (error) {
+                console.error('Error loading barbers:', error);
+                container.innerHTML = '<div class="loading">Error loading barbers. Please refresh the page.</div>';
+            }
+        }
+
+        // Open create modal
+        function openCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Barber';
+            document.getElementById('barberForm').reset();
+            document.getElementById('barberId').value = '';
+            document.getElementById('barberModal').classList.add('active');
+        }
+
+        // Edit barber
+        function editBarber(barber) {
+            document.getElementById('modalTitle').textContent = 'Edit Barber';
+            document.getElementById('barberId').value = barber.id;
+            document.getElementById('barberName').value = barber.name;
+            document.getElementById('barberPhone').value = barber.phoneNumber || '';
+            document.getElementById('barberBio').value = barber.bio || '';
+            document.getElementById('barberDisplayOrder').value = barber.displayOrder;
+            document.getElementById('barberActive').value = barber.active.toString();
+            document.getElementById('barberModal').classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('barberModal').classList.remove('active');
+        }
+
+        // Save barber (create or update)
+        async function saveBarber(event) {
+            event.preventDefault();
+
+            const barberId = document.getElementById('barberId').value;
+            const barberData = {
+                name: document.getElementById('barberName').value,
+                phoneNumber: document.getElementById('barberPhone').value || null,
+                bio: document.getElementById('barberBio').value || null,
+                displayOrder: parseInt(document.getElementById('barberDisplayOrder').value),
+                active: document.getElementById('barberActive').value === 'true'
+            };
+
+            try {
+                let response;
+                if (barberId) {
+                    // Update existing barber
+                    response = await fetch(`${API_BASE}/barbers/${barberId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(barberData)
+                    });
+                } else {
+                    // Create new barber
+                    response = await fetch(`${API_BASE}/barbers`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(barberData)
+                    });
+                }
+
+                if (response.ok) {
+                    alert(barberId ? 'Barber updated successfully!' : 'Barber created successfully!');
+                    closeModal();
+                    loadBarbers();
+                } else {
+                    alert('Error saving barber. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error saving barber:', error);
+                alert('Error saving barber. Please try again.');
+            }
+        }
+
+        // Delete barber (soft delete - deactivate)
+        async function deleteBarber(barberId, barberName) {
+            if (!confirm(`Are you sure you want to deactivate ${barberName}? They will no longer appear in the booking flow, but their past bookings will remain.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/barbers/${barberId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Barber deactivated successfully!');
+                    loadBarbers();
+                } else {
+                    alert('Error deactivating barber. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error deactivating barber:', error);
+                alert('Error deactivating barber. Please try again.');
+            }
+        }
+
+        // View barber schedule
+        function viewSchedule(barberId) {
+            window.location.href = `/admin-barber-schedule.html?barberId=${barberId}`;
+        }
+    </script>
+</body>
+</html>

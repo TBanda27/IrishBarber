@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Fade Factory Barbershop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .stat-card.revenue .stat-value {
+            color: #48bb78;
+        }
+
+        .stat-card.bookings .stat-value {
+            color: #667eea;
+        }
+
+        .stat-card.customers .stat-value {
+            color: #ed8936;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel h2 {
+            color: #2d3748;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .date-filter {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-filter input {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .date-filter button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .date-filter button:hover {
+            background: #5a67d8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f7fafc;
+            color: #4a5568;
+            font-weight: 600;
+            text-align: left;
+            padding: 12px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-confirmed {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .status-completed {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-cancelled {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status-no_show {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-complete {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-complete:hover {
+            background: #38a169;
+        }
+
+        .btn-noshow {
+            background: #f6ad55;
+            color: white;
+        }
+
+        .btn-noshow:hover {
+            background: #ed8936;
+        }
+
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .service-item:last-child {
+            border-bottom: none;
+        }
+
+        .service-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .service-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+        }
+
+        .customer-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .customer-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .customer-item:last-child {
+            border-bottom: none;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .customer-info {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .loyalty-points {
+            color: #ed8936;
+            font-weight: 600;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>Admin Dashboard</h1>
+                <p>Fade Factory Barbershop - Real-time Business Overview</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="window.location.href='/admin-services.html'" style="padding: 10px 20px; border: none; border-radius: 5px; background: #667eea; color: white; cursor: pointer; font-weight: 600;">Manage Services</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/admin-barbers.html'" style="padding: 10px 20px; border: none; border-radius: 5px; background: #4299e1; color: white; cursor: pointer; font-weight: 600;">Manage Barbers</button>
+                <button class="btn btn-info" onclick="window.location.href='/admin-barber-schedule.html'" style="padding: 10px 20px; border: none; border-radius: 5px; background: #48bb78; color: white; cursor: pointer; font-weight: 600;">Barber Schedules</button>
+            </div>
+        </div>
+
+        <!-- Statistics Grid -->
+        <div class="stats-grid">
+            <div class="stat-card revenue">
+                <h3>Today's Revenue</h3>
+                <div class="stat-value" id="today-revenue">€0</div>
+                <div class="stat-label">From <span id="today-completed">0</span> completed bookings</div>
+            </div>
+
+            <div class="stat-card bookings">
+                <h3>Today's Bookings</h3>
+                <div class="stat-value" id="today-bookings">0</div>
+                <div class="stat-label">Confirmed & Completed</div>
+            </div>
+
+            <div class="stat-card revenue">
+                <h3>Week Revenue</h3>
+                <div class="stat-value" id="week-revenue">€0</div>
+                <div class="stat-label">Last 7 days</div>
+            </div>
+
+            <div class="stat-card customers">
+                <h3>Active Customers</h3>
+                <div class="stat-value" id="active-customers">0</div>
+                <div class="stat-label">Out of <span id="total-customers">0</span> total</div>
+            </div>
+        </div>
+
+        <!-- Additional Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Week Bookings</h3>
+                <div class="stat-value" id="week-bookings">0</div>
+                <div class="stat-label">Last 7 days</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Month Revenue</h3>
+                <div class="stat-value" id="month-revenue">€0</div>
+                <div class="stat-label">Last 30 days</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Month Bookings</h3>
+                <div class="stat-value" id="month-bookings">0</div>
+                <div class="stat-label">Last 30 days</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Avg Booking Value</h3>
+                <div class="stat-value" id="avg-booking">€0</div>
+                <div class="stat-label">Per completed booking</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Bookings Table -->
+            <div class="panel">
+                <h2>Bookings</h2>
+                <div class="date-filter">
+                    <input type="date" id="booking-date" />
+                    <button onclick="loadBookings()">Load Bookings</button>
+                    <button onclick="setTodayDate()">Today</button>
+                    <button onclick="setTomorrowDate()">Tomorrow</button>
+                </div>
+                <div id="bookings-container">
+                    <div class="loading">Loading bookings...</div>
+                </div>
+            </div>
+
+            <!-- Popular Services -->
+            <div class="panel">
+                <h2>Popular Services</h2>
+                <div id="services-container">
+                    <div class="loading">Loading services...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Customers -->
+        <div class="panel">
+            <h2>Top Customers</h2>
+            <div class="customer-list" id="customers-container">
+                <div class="loading">Loading customers...</div>
+            </div>
+        </div>
+
+        <!-- Barber Performance -->
+        <div class="panel" style="margin-top: 25px;">
+            <h2>Barber Performance (Last 30 Days)</h2>
+            <div id="barbers-container">
+                <div class="loading">Loading barber stats...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE = '/api/admin';
+
+        // Load dashboard on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTodayDate();
+            loadDashboardStats();
+            loadBookings();
+            loadBarberStats();
+        });
+
+        // Set today's date in date picker
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('booking-date').value = today;
+            loadBookings();
+        }
+
+        // Set tomorrow's date in date picker
+        function setTomorrowDate() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('booking-date').value = tomorrow.toISOString().split('T')[0];
+            loadBookings();
+        }
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const data = await response.json();
+
+                // Update statistics
+                document.getElementById('today-revenue').textContent = `€${data.todayRevenue.toFixed(2)}`;
+                document.getElementById('today-completed').textContent = data.todayCompleted;
+                document.getElementById('today-bookings').textContent = data.todayBookings;
+                document.getElementById('week-revenue').textContent = `€${data.weekRevenue.toFixed(2)}`;
+                document.getElementById('week-bookings').textContent = data.weekBookings;
+                document.getElementById('month-revenue').textContent = `€${data.monthRevenue.toFixed(2)}`;
+                document.getElementById('month-bookings').textContent = data.monthBookings;
+                document.getElementById('active-customers').textContent = data.activeCustomers;
+                document.getElementById('total-customers').textContent = data.totalCustomers;
+                document.getElementById('avg-booking').textContent = `€${data.averageBookingValue.toFixed(2)}`;
+
+                // Load popular services
+                loadPopularServices(data.popularServices);
+
+                // Load top customers
+                loadTopCustomers();
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+
+        // Load bookings for selected date
+        async function loadBookings() {
+            const dateInput = document.getElementById('booking-date').value;
+            if (!dateInput) return;
+
+            const container = document.getElementById('bookings-container');
+            container.innerHTML = '<div class="loading">Loading bookings...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/bookings?date=${dateInput}`);
+                const bookings = await response.json();
+
+                if (bookings.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No bookings for this date</div>';
+                    return;
+                }
+
+                const table = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Time</th>
+                                <th>Barber</th>
+                                <th>Customer</th>
+                                <th>Service</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${bookings.map(booking => `
+                                <tr>
+                                    <td><strong>${booking.bookingCode}</strong></td>
+                                    <td>${booking.startTime} - ${booking.endTime}</td>
+                                    <td>${booking.barberName}</td>
+                                    <td>${booking.customerPhone}</td>
+                                    <td>${booking.serviceName}</td>
+                                    <td>€${booking.servicePrice.toFixed(2)}</td>
+                                    <td><span class="status-badge status-${booking.status.toLowerCase()}">${booking.status}</span></td>
+                                    <td>
+                                        ${booking.status === 'CONFIRMED' ? `
+                                            <div class="action-buttons">
+                                                <button class="btn btn-complete" onclick="markAsCompleted('${booking.bookingCode}')">Complete</button>
+                                                <button class="btn btn-noshow" onclick="markAsNoShow('${booking.bookingCode}')">No-Show</button>
+                                            </div>
+                                        ` : '-'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = table;
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                container.innerHTML = '<div class="empty-state">Error loading bookings</div>';
+            }
+        }
+
+        // Load popular services
+        function loadPopularServices(services) {
+            const container = document.getElementById('services-container');
+
+            if (!services || services.length === 0) {
+                container.innerHTML = '<div class="empty-state">No service data available</div>';
+                return;
+            }
+
+            const html = services.map(service => `
+                <div class="service-item">
+                    <div class="service-name">${service.serviceName}</div>
+                    <div class="service-stats">
+                        <span>${service.bookingCount} bookings</span>
+                        <span>€${service.totalRevenue.toFixed(2)}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Load top customers
+        async function loadTopCustomers() {
+            const container = document.getElementById('customers-container');
+
+            try {
+                const response = await fetch(`${API_BASE}/customers/top?limit=10`);
+                const customers = await response.json();
+
+                if (customers.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No customer data available</div>';
+                    return;
+                }
+
+                const html = customers.map(customer => `
+                    <div class="customer-item">
+                        <div class="customer-name">${customer.name || customer.phoneNumber}</div>
+                        <div class="customer-info">
+                            <span class="loyalty-points">${customer.loyaltyPoints} points</span> •
+                            ${customer.completedBookings} visits •
+                            Last visit: ${customer.lastVisit || 'Never'}
+                        </div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading customers:', error);
+                container.innerHTML = '<div class="empty-state">Error loading customers</div>';
+            }
+        }
+
+        // Load barber statistics
+        async function loadBarberStats() {
+            const container = document.getElementById('barbers-container');
+
+            try {
+                const response = await fetch(`${API_BASE}/barbers/stats`);
+                const barbers = await response.json();
+
+                if (barbers.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No barber data available</div>';
+                    return;
+                }
+
+                const table = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Barber</th>
+                                <th>Rating</th>
+                                <th>Total Bookings</th>
+                                <th>Completed</th>
+                                <th>Recent (30d)</th>
+                                <th>Completion Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${barbers.map(barber => `
+                                <tr>
+                                    <td><strong>${barber.barberName}</strong></td>
+                                    <td>${barber.rating ? `⭐ ${barber.rating.toFixed(1)}` : '-'}</td>
+                                    <td>${barber.totalBookings}</td>
+                                    <td>${barber.completedBookings}</td>
+                                    <td>${barber.recentBookings}</td>
+                                    <td>${barber.completionRate.toFixed(1)}%</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = table;
+            } catch (error) {
+                console.error('Error loading barber stats:', error);
+                container.innerHTML = '<div class="empty-state">Error loading barber stats</div>';
+            }
+        }
+
+        // Mark booking as completed
+        async function markAsCompleted(bookingCode) {
+            if (!confirm(`Mark booking ${bookingCode} as completed?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/bookings/${bookingCode}/complete`, {
+                    method: 'PUT'
+                });
+
+                if (response.ok) {
+                    alert('Booking marked as completed');
+                    loadBookings();
+                    loadDashboardStats();
+                } else {
+                    alert('Error updating booking');
+                }
+            } catch (error) {
+                console.error('Error marking as completed:', error);
+                alert('Error updating booking');
+            }
+        }
+
+        // Mark booking as no-show
+        async function markAsNoShow(bookingCode) {
+            if (!confirm(`Mark booking ${bookingCode} as no-show?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/bookings/${bookingCode}/no-show`, {
+                    method: 'PUT'
+                });
+
+                if (response.ok) {
+                    alert('Booking marked as no-show');
+                    loadBookings();
+                    loadDashboardStats();
+                } else {
+                    alert('Error updating booking');
+                }
+            } catch (error) {
+                console.error('Error marking as no-show:', error);
+                alert('Error updating booking');
+            }
+        }
+    </script>
+</body>
+</html>
