@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Slf4j
 public class WhatsAppWebhookController {
-
     private final MessageHandlerDispatcher dispatcher;
     private final ConversationStateService stateService;
     private final WhatsAppService whatsAppService;
