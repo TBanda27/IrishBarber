@@ -79,15 +79,14 @@ public class SelectBarberHandler implements MessageHandler {
                 .build();
         }
 
-        // Process barber selection
+        // Process barber selection - invalid input re-displays the menu
         Integer choice = request.getParsedChoice();
         if (choice == null || choice < 1 || choice > barbers.size()) {
             Customer customer = customerService.getOrCreateCustomer(request.getPhoneNumber());
             Barber preferredBarber = customer.getPreferredBarber();
 
             return HandlerResponse.builder()
-                .message(buildBarberMenu(barbers, preferredBarber) +
-                        "\n\n⚠️ Please enter a valid number (1-" + barbers.size() + ")")
+                .message(buildBarberMenu(barbers, preferredBarber))
                 .nextStep(ConversationStep.SELECT_BARBER)
                 .contextData(request.getContextData())
                 .build();

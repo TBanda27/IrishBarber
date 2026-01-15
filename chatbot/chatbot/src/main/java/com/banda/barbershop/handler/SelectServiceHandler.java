@@ -65,11 +65,11 @@ public class SelectServiceHandler implements MessageHandler {
                 .build();
         }
 
-        // Process user's service selection
+        // Process user's service selection - invalid input re-displays the menu
         Integer choice = request.getParsedChoice();
         if (choice == null || choice < 1 || choice > services.size()) {
             return HandlerResponse.builder()
-                .message(buildServiceMenu(services) + "\n\n⚠️ Please enter a valid number (1-" + services.size() + ")")
+                .message(buildServiceMenu(services))
                 .nextStep(ConversationStep.SELECT_SERVICE)
                 .clearContext(true)
                 .build();

@@ -31,16 +31,10 @@ public class LoyaltyConfig {
         private Integer discountPercent = 20;
     }
 
-    /**
-     * Check if a booking count is a milestone
-     */
     public boolean isMilestone(int bookingCount) {
         return milestones.contains(bookingCount);
     }
 
-    /**
-     * Get congratulations message for milestone
-     */
     public String getMilestoneMessage(int bookingCount) {
         return switch (bookingCount) {
             case 5 -> "You've completed 5 bookings! You're becoming a regular! 🌟";

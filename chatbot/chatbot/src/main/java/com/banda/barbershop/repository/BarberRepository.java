@@ -11,19 +11,11 @@ import java.util.Optional;
 @Repository
 public interface BarberRepository extends JpaRepository<Barber, Long> {
 
-    /**
-     * Find active barbers ordered by display order
-     */
+
     List<Barber> findByActiveOrderByDisplayOrder(boolean active);
 
-    /**
-     * Find barber by phone number
-     */
     Optional<Barber> findByPhoneNumber(String phoneNumber);
 
-    /**
-     * Find all active barbers ordered by display order then name
-     */
     @Query("SELECT b FROM Barber b WHERE b.active = true ORDER BY b.displayOrder, b.name")
     List<Barber> findAllActiveBarbers();
 }

@@ -61,6 +61,8 @@ public class Booking {
 
     private LocalDateTime cancelledAt;
 
+    private LocalDateTime completedAt;
+
     // Reminder tracking
     @Column(nullable = false)
     private boolean dayBeforeReminderSent = false;

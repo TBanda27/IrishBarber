@@ -77,4 +77,23 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
      * Get all bookings for barber
      */
     List<Booking> findByBarberIdOrderByBookingDateDesc(Long barberId);
+
+    /**
+     * Find confirmed bookings that have passed their end time (ready for completion)
+     * Used by scheduler to auto-complete bookings
+     */
+    @Query("SELECT b FROM Booking b WHERE b.status = 'CONFIRMED' " +
+           "AND (b.bookingDate < :today OR (b.bookingDate = :today AND b.endTime <= :currentTime))")
+    List<Booking> findBookingsReadyForCompletion(
+        @Param("today") LocalDate today,
+        @Param("currentTime") LocalTime currentTime
+    );
+
+    /**
+     * Find confirmed bookings from past days that were never completed (potential no-shows)
+     * Grace period: bookings from before today that are still CONFIRMED
+     */
+    @Query("SELECT b FROM Booking b WHERE b.status = 'CONFIRMED' " +
+           "AND b.bookingDate < :today")
+    List<Booking> findPotentialNoShows(@Param("today") LocalDate today);
 }

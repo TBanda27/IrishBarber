@@ -5,10 +5,14 @@ import com.banda.barbershop.dto.HandlerResponse;
 import com.banda.barbershop.entity.ConversationState;
 import com.banda.barbershop.handler.MessageHandlerDispatcher;
 import com.banda.barbershop.service.ConversationStateService;
+import com.banda.barbershop.service.TwilioValidationService;
 import com.banda.barbershop.service.WhatsAppService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,18 +23,34 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Slf4j
 public class WhatsAppWebhookController {
+
+    private static final String EMPTY_TWIML_RESPONSE =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>";
+
     private final MessageHandlerDispatcher dispatcher;
     private final ConversationStateService stateService;
     private final WhatsAppService whatsAppService;
+    private final TwilioValidationService twilioValidationService;
 
     @PostMapping(value = "/whatsapp", produces = MediaType.APPLICATION_XML_VALUE)
-    public String receiveMessage(
+    public ResponseEntity<String> receiveMessage(
+            HttpServletRequest httpRequest,
             @RequestParam("From") String from,
             @RequestParam("Body") String body) {
+
+        // Validate Twilio signature
+        if (!twilioValidationService.validateRequest(httpRequest)) {
+            log.warn("Rejected request with invalid Twilio signature from IP: {}",
+                    getClientIp(httpRequest));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(EMPTY_TWIML_RESPONSE);
+        }
+
         log.info("Received message from {}: {}", from, body);
+
         if (from == null || from.isEmpty()) {
             log.error("Invalid webhook: 'From' parameter is missing");
-            return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>";
+            return ResponseEntity.ok(EMPTY_TWIML_RESPONSE);
         }
 
         if (body == null) {
@@ -48,8 +68,8 @@ public class WhatsAppWebhookController {
         } catch (Exception e) {
             log.error("Failed to retrieve conversation state for {}: {}", phoneNumber, e.getMessage(), e);
             whatsAppService.sendMessage(phoneNumber,
-                "⚠️ We're experiencing technical difficulties. Please try again in a moment.");
-            return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>";
+                "We're experiencing technical difficulties. Please try again in a moment.");
+            return ResponseEntity.ok(EMPTY_TWIML_RESPONSE);
         }
 
         HandlerRequest request = HandlerRequest.builder()
@@ -68,9 +88,9 @@ public class WhatsAppWebhookController {
         } catch (Exception e) {
             log.error("Error dispatching to handler for {}: {}", phoneNumber, e.getMessage(), e);
             whatsAppService.sendMessage(phoneNumber,
-                "⚠️ Something went wrong. Let's start over!\n\n0️⃣ Main Menu");
+                "Something went wrong. Let's start over!\n\n0 - Main Menu");
             stateService.resetToMainMenu(phoneNumber);
-            return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>";
+            return ResponseEntity.ok(EMPTY_TWIML_RESPONSE);
         }
 
         try {
@@ -121,7 +141,7 @@ public class WhatsAppWebhookController {
             }
         }
 
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>";
+        return ResponseEntity.ok(EMPTY_TWIML_RESPONSE);
     }
 
     private String extractPhoneNumber(String from) {
@@ -134,5 +154,13 @@ public class WhatsAppWebhookController {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

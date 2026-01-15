@@ -2,6 +2,18 @@ spring:
   application:
     name: barbershop-booking-bot
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
   datasource:
     url: jdbc:mysql://localhost:3306/barbershop_booking?createDatabaseIfNotExist=true
     username: ${DB_USERNAME:root}
@@ -22,51 +34,39 @@ spring:
       static-locations: classpath:/static/
       add-mappings: true
 
-
-# Barbershop Configuration
 barbershop:
   name: Fade Factory Barbershop
   address: 123 Main St, Dublin
   phone: '+353-1-234-5678'
   whatsapp-number: 'whatsapp:+353871234567'
 
-  # Operating Hours
   operating-hours:
     opening-time: '09:00'
     closing-time: '19:00'
     closed-days:
       - SUNDAY
 
-  # Capacity and Booking Rules
   number-of-barbers: 3
   slot-interval-minutes: 30
   minimum-advance-booking-hours: 2
 
-
-# Automated Reminder Configuration
 reminders:
   enabled: true
 
-  # Day-before reminder (sent at 6 PM for tomorrow's bookings)
   day-before:
     enabled: true
     time: '18:00'  # 6:00 PM
 
-  # One-hour reminder (sent 60 minutes before appointment)
   one-hour:
     enabled: true
     minutes-before: 60
 
-
-# Loyalty & Customer History Configuration
 loyalty:
   enabled: true
 
-  # Points awarded per booking
   points-per-booking: 10
   bonus-points-for-first-booking: 50
 
-  # Milestones (congratulate customers at these booking counts)
   milestones:
     - 5
     - 10
@@ -74,21 +74,19 @@ loyalty:
     - 50
     - 100
 
-  # Birthday rewards
   birthday:
     enabled: true
     bonus-points: 100
     discount-code: 'BDAY20'
     discount-percent: 20
 
-
-# Twilio WhatsApp Configuration
 twilio:
   account-sid: ${ACCOUNT_SID}
   auth-token: ${AUTH_TOKEN}
   phone-number: ${TWILIO_NUMBER}
+  webhook:
+    validation-enabled: ${TWILIO_VALIDATION_ENABLED:true}
 
-# Logging Configuration
 logging:
   level:
     root: INFO
@@ -97,6 +95,7 @@ logging:
     com.banda.barbershop.handler: INFO
     com.banda.barbershop.service: DEBUG
     org.springframework.web: WARN
+    org.springframework.web.servlet.resource.ResourceHttpRequestHandler: ERROR
     org.hibernate: WARN
   pattern:
     console: '%d{yyyy-MM-dd HH:mm:ss} - %msg%n'

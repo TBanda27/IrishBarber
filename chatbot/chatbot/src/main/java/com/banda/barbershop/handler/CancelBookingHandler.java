@@ -204,18 +204,18 @@ public class CancelBookingHandler implements MessageHandler {
                 .build();
         }
 
-        // Invalid input - show prompt again
+        // Invalid input - re-display the confirmation prompt
         Optional<Booking> booking = bookingService.getBookingByCode(bookingCode);
         if (booking.isPresent()) {
             String confirmMessage = buildCancellationPrompt(booking.get());
             return HandlerResponse.builder()
-                .message(confirmMessage + "\n\n⚠️ Please reply YES or NO")
+                .message(confirmMessage)
                 .nextStep(ConversationStep.CANCEL_BOOKING_CONFIRM)
                 .contextData(request.getContextData())
                 .build();
         } else {
             return HandlerResponse.builder()
-                .message("⚠️ Booking not found.\n\n0️⃣ Main Menu")
+                .message("Booking not found.\n\n0 - Main Menu")
                 .nextStep(ConversationStep.MAIN_MENU)
                 .clearContext(true)
                 .build();

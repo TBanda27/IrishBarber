@@ -27,6 +27,16 @@ public class ViewMyBookingsHandler implements MessageHandler {
 
     @Override
     public HandlerResponse handle(HandlerRequest request) {
+        // Check for menu command - only 0 should go back to main menu
+        String userInput = request.getUserInput().toUpperCase().trim();
+        if ("0".equals(userInput) || "MENU".equals(userInput)) {
+            return HandlerResponse.builder()
+                .message("")
+                .nextStep(ConversationStep.MAIN_MENU)
+                .clearContext(true)
+                .build();
+        }
+
         List<Booking> bookings = bookingService.getCustomerBookings(request.getPhoneNumber());
 
         if (bookings.isEmpty()) {
@@ -38,15 +48,16 @@ public class ViewMyBookingsHandler implements MessageHandler {
 
                     0️⃣ Main Menu
                     """)
-                .nextStep(ConversationStep.MAIN_MENU)
+                .nextStep(ConversationStep.VIEW_MY_BOOKINGS)
                 .clearContext(true)
                 .build();
         }
 
+        // Show bookings and stay in this step until user presses 0
         String message = buildBookingsMessage(bookings);
         return HandlerResponse.builder()
             .message(message)
-            .nextStep(ConversationStep.MAIN_MENU)
+            .nextStep(ConversationStep.VIEW_MY_BOOKINGS)
             .clearContext(true)
             .build();
     }

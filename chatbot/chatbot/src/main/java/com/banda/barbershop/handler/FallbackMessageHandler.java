@@ -26,15 +26,10 @@ public class FallbackMessageHandler implements MessageHandler {
                 .build();
         }
 
-        // Default fallback message
-        String message = """
-            ⚠️ I didn't understand that.
-
-            Reply 0 or MENU to return to main menu
-            """;
-
+        // Invalid input: return empty message to trigger auto-dispatch
+        // This will re-display the current menu/step
         return HandlerResponse.builder()
-            .message(message)
+            .message("")
             .nextStep(request.getCurrentStep())
             .contextData(request.getContextData())
             .build();

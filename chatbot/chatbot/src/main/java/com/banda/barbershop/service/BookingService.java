@@ -8,6 +8,8 @@ import com.banda.barbershop.repository.BarberRepository;
 import com.banda.barbershop.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -29,9 +31,11 @@ public class BookingService {
     private static final Random RANDOM = new Random();
 
     /**
-     * Create a new booking with specific barber
+     * Create a new booking with specific barber.
+     * Evicts the customer's bookings cache since a new booking was added.
      */
     @Transactional
+    @CacheEvict(value = "customerBookings", key = "#customerPhone")
     public Booking createBooking(String customerPhone, Service service, Long barberId,
                                   LocalDate bookingDate, LocalTime startTime) {
 
@@ -88,21 +92,25 @@ public class BookingService {
     }
 
     /**
-     * Get customer's active bookings
+     * Get customer's active bookings.
+     * Results are cached to reduce database queries for frequent lookups.
      */
+    @Cacheable(value = "customerBookings", key = "#customerPhone")
     public List<Booking> getCustomerBookings(String customerPhone) {
         List<BookingStatus> activeStatuses = List.of(BookingStatus.CONFIRMED);
         List<Booking> bookings = bookingRepository.findByCustomerPhoneAndStatusIn(
             customerPhone, activeStatuses);
 
-        log.debug("Found {} active bookings for customer {}", bookings.size(), customerPhone);
+        log.debug("Found {} active bookings for customer {} (from database)", bookings.size(), customerPhone);
         return bookings;
     }
 
     /**
-     * Cancel a booking by booking code
+     * Cancel a booking by booking code.
+     * Evicts the customer's bookings cache since a booking was cancelled.
      */
     @Transactional
+    @CacheEvict(value = "customerBookings", key = "#customerPhone")
     public boolean cancelBooking(String bookingCode, String customerPhone) {
         Optional<Booking> bookingOpt = bookingRepository.findByBookingCode(bookingCode);
 
@@ -177,5 +185,94 @@ public class BookingService {
         return bookings.stream()
             .anyMatch(b -> b.getCustomerPhone().equals(customerPhone) &&
                           b.getService().getId().equals(service.getId()));
+    }
+
+    /**
+     * Mark a booking as completed.
+     * Called by admin or scheduler after appointment time has passed.
+     */
+    @Transactional
+    @CacheEvict(value = "customerBookings", key = "#booking.customerPhone")
+    public void completeBooking(Booking booking) {
+        if (booking.getStatus() != BookingStatus.CONFIRMED) {
+            log.warn("Cannot complete booking {} - status is {}",
+                    booking.getBookingCode(), booking.getStatus());
+            return;
+        }
+
+        booking.setStatus(BookingStatus.COMPLETED);
+        booking.setCompletedAt(LocalDateTime.now());
+        bookingRepository.save(booking);
+
+        // Update customer stats
+        customerService.recordCompletedBooking(booking.getCustomerPhone());
+
+        log.info("Completed booking {} for customer {}",
+                booking.getBookingCode(), booking.getCustomerPhone());
+    }
+
+    /**
+     * Mark a booking as no-show.
+     * Called when customer didn't arrive for their appointment.
+     */
+    @Transactional
+    @CacheEvict(value = "customerBookings", key = "#booking.customerPhone")
+    public void markNoShow(Booking booking) {
+        if (booking.getStatus() != BookingStatus.CONFIRMED) {
+            log.warn("Cannot mark no-show for booking {} - status is {}",
+                    booking.getBookingCode(), booking.getStatus());
+            return;
+        }
+
+        booking.setStatus(BookingStatus.NO_SHOW);
+        bookingRepository.save(booking);
+
+        // Update customer no-show stats
+        customerService.recordNoShow(booking.getCustomerPhone());
+
+        log.info("Marked booking {} as no-show for customer {}",
+                booking.getBookingCode(), booking.getCustomerPhone());
+    }
+
+    /**
+     * Get all bookings that are ready to be completed (past their end time)
+     */
+    public List<Booking> getBookingsReadyForCompletion() {
+        return bookingRepository.findBookingsReadyForCompletion(
+            LocalDate.now(), LocalTime.now());
+    }
+
+    /**
+     * Get all potential no-show bookings (past bookings still in CONFIRMED status)
+     */
+    public List<Booking> getPotentialNoShows() {
+        return bookingRepository.findPotentialNoShows(LocalDate.now());
+    }
+
+    /**
+     * Process all bookings that have passed their time.
+     * By default, marks them as completed. Admin can override to no-show if needed.
+     * Returns count of processed bookings.
+     */
+    @Transactional
+    public int autoCompleteBookings() {
+        List<Booking> bookings = getBookingsReadyForCompletion();
+        int count = 0;
+
+        for (Booking booking : bookings) {
+            try {
+                completeBooking(booking);
+                count++;
+            } catch (Exception e) {
+                log.error("Failed to auto-complete booking {}: {}",
+                         booking.getBookingCode(), e.getMessage());
+            }
+        }
+
+        if (count > 0) {
+            log.info("Auto-completed {} bookings", count);
+        }
+
+        return count;
     }
 }
