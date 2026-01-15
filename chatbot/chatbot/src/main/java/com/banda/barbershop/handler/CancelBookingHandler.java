@@ -74,7 +74,7 @@ public class CancelBookingHandler implements MessageHandler {
             return HandlerResponse.builder()
                 .message("")
                 .nextStep(ConversationStep.MAIN_MENU)
-                .contextData("show_initial")
+                .clearContext(true)
                 .build();
         }
 

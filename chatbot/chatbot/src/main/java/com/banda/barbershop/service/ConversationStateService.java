@@ -52,7 +52,7 @@ public class ConversationStateService {
     public void resetToMainMenu(String phoneNumber) {
         ConversationState state = getOrCreate(phoneNumber);
         state.setCurrentStep(ConversationStep.MAIN_MENU);
-        state.setContextData("show_initial");
+        state.setContextData(null);
         repository.save(state);
     }
 
@@ -60,6 +60,7 @@ public class ConversationStateService {
         ConversationState newState = ConversationState.builder()
             .phoneNumber(phoneNumber)
             .currentStep(ConversationStep.MAIN_MENU)
+            .contextData("show_initial")
             .build();
         return repository.save(newState);
     }

@@ -17,11 +17,14 @@ public class MainMenuHandler implements MessageHandler {
     public HandlerResponse handle(HandlerRequest request) {
         String message = buildMainMenu();
 
-        if ("show_initial".equals(request.getContextData())) {
+        // If context is "show_initial" OR null/empty, show menu and ignore user input
+        // This ensures first message after joining stream always shows menu
+        String contextData = request.getContextData();
+        if (contextData == null || contextData.isEmpty() || "show_initial".equals(contextData)) {
             return HandlerResponse.builder()
                 .message(message)
                 .nextStep(ConversationStep.MAIN_MENU)
-                .clearContext(true)
+                .contextData("ready")
                 .build();
         }
 
@@ -30,7 +33,7 @@ public class MainMenuHandler implements MessageHandler {
             return HandlerResponse.builder()
                 .message(message)
                 .nextStep(ConversationStep.MAIN_MENU)
-                .clearContext(true)
+                .contextData("ready")
                 .build();
         }
 
@@ -40,7 +43,7 @@ public class MainMenuHandler implements MessageHandler {
             return HandlerResponse.builder()
                 .message(message)
                 .nextStep(nextStep)
-                .clearContext(true)
+                .contextData("ready")
                 .build();
         }
 
