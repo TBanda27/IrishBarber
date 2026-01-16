@@ -11,8 +11,8 @@ public class ReminderConfig {
 
     private boolean enabled = true;
 
-    private DayBeforeReminder dayBefore;
-    private OneHourReminder oneHour;
+    private DayBeforeReminder dayBefore = new DayBeforeReminder();
+    private OneHourReminder oneHour = new OneHourReminder();
 
     @Data
     public static class DayBeforeReminder {

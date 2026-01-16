@@ -88,7 +88,7 @@ public class WhatsAppWebhookController {
         } catch (Exception e) {
             log.error("Error dispatching to handler for {}: {}", phoneNumber, e.getMessage(), e);
             whatsAppService.sendMessage(phoneNumber,
-                "Something went wrong. Let's start over!\n\n0 - Main Menu");
+                "Something went wrong. Let's start over!\n\n0️⃣ - Main Menu");
             stateService.resetToMainMenu(phoneNumber);
             return ResponseEntity.ok(EMPTY_TWIML_RESPONSE);
         }

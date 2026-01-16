@@ -46,10 +46,8 @@ public class AvailabilityService {
             // For future dates, start from opening time
             fromTime = shopConfig.getOpeningTime();
         }
-
         return getAvailableSlotsForBarber(date, service, barberId, fromTime);
     }
-
     /**
      * Core logic to calculate available slots for specific barber
      */
@@ -75,7 +73,6 @@ public class AvailabilityService {
             if (isBarberAvailable(date, currentSlot, serviceDuration, barberId)) {
                 availableSlots.add(currentSlot);
             }
-
             currentSlot = currentSlot.plusMinutes(slotInterval);
         }
 

@@ -8,6 +8,7 @@ import com.banda.barbershop.dto.CustomerDTO;
 import com.banda.barbershop.dto.DashboardStatsDTO;
 import com.banda.barbershop.dto.ServiceDTO;
 import com.banda.barbershop.service.AdminService;
+import com.banda.barbershop.service.ReminderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,6 +26,7 @@ import java.util.List;
 public class AdminController {
 
     private final AdminService adminService;
+    private final ReminderService reminderService;
 
     /**
      * Get comprehensive dashboard statistics
@@ -280,6 +282,59 @@ public class AdminController {
         log.info("Fetching barber statistics");
         List<BarberStatsDTO> stats = adminService.getBarberStats();
         return ResponseEntity.ok(stats);
+    }
+
+    // ==================== Reminder Test Endpoints ====================
+
+    /**
+     * Manually trigger one-hour reminders (for testing)
+     * POST /api/admin/reminders/one-hour
+     */
+    @PostMapping("/reminders/one-hour")
+    public ResponseEntity<?> triggerOneHourReminders() {
+        log.info("Manually triggering one-hour reminders");
+        try {
+            int sent = reminderService.sendOneHourReminders();
+            return ResponseEntity.ok(new StatusResponse(true, "Sent " + sent + " one-hour reminders"));
+        } catch (Exception e) {
+            log.error("Error triggering one-hour reminders: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                .body(new StatusResponse(false, "Error: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Manually trigger day-before reminders (for testing)
+     * POST /api/admin/reminders/day-before
+     */
+    @PostMapping("/reminders/day-before")
+    public ResponseEntity<?> triggerDayBeforeReminders() {
+        log.info("Manually triggering day-before reminders");
+        try {
+            int sent = reminderService.sendDayBeforeReminders();
+            return ResponseEntity.ok(new StatusResponse(true, "Sent " + sent + " day-before reminders"));
+        } catch (Exception e) {
+            log.error("Error triggering day-before reminders: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                .body(new StatusResponse(false, "Error: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Send test reminder to specific booking (for testing)
+     * POST /api/admin/reminders/test/{bookingCode}
+     */
+    @PostMapping("/reminders/test/{bookingCode}")
+    public ResponseEntity<?> sendTestReminder(@PathVariable String bookingCode) {
+        log.info("Sending test reminder for booking: {}", bookingCode);
+        try {
+            reminderService.sendTestReminder(bookingCode);
+            return ResponseEntity.ok(new StatusResponse(true, "Test reminder sent for booking " + bookingCode));
+        } catch (Exception e) {
+            log.error("Error sending test reminder: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                .body(new StatusResponse(false, "Error: " + e.getMessage()));
+        }
     }
 
     /**
