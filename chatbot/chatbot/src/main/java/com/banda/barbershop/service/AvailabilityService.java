@@ -80,7 +80,6 @@ public class AvailabilityService {
                   availableSlots.size(), barberId, date, fromTime);
         return availableSlots;
     }
-
     /**
      * Check if specific barber is available at time slot (no overlapping bookings)
      */
