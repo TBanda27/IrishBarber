@@ -75,7 +75,6 @@ public class AvailabilityService {
             }
             currentSlot = currentSlot.plusMinutes(slotInterval);
         }
-
         log.debug("Found {} available slots for barber {} on {} starting from {}",
                   availableSlots.size(), barberId, date, fromTime);
         return availableSlots;
