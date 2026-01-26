@@ -105,9 +105,27 @@ public class WhatsAppWebhookController {
             log.error("Failed to update conversation state for {}: {}", phoneNumber, e.getMessage(), e);
         }
 
-        // Auto-dispatch: if handler returned empty message, call next handler to show content
-        if (response.getMessage().isEmpty() && response.getNextStep() != null) {
+        // Auto-dispatch: loop until handler returns a non-empty message
+        int maxAutoDispatch = 5; // Safety limit to prevent infinite loops
+        int autoDispatchCount = 0;
+
+        while (response.getMessage().isEmpty() &&
+               response.getNextStep() != null &&
+               autoDispatchCount < maxAutoDispatch) {
             try {
+                autoDispatchCount++;
+                log.debug("Auto-dispatch #{} to step {}", autoDispatchCount, response.getNextStep());
+
+                // Update state before dispatching to next handler
+                if (response.isClearContext()) {
+                    stateService.updateStepAndContext(phoneNumber, response.getNextStep(), null);
+                } else if (response.getContextData() != null) {
+                    stateService.updateStepAndContext(phoneNumber, response.getNextStep(), response.getContextData());
+                } else {
+                    stateService.updateStep(phoneNumber, response.getNextStep());
+                }
+
+                // Dispatch to next handler
                 ConversationState updatedState = stateService.getOrCreate(phoneNumber);
                 HandlerRequest followUpRequest = HandlerRequest.builder()
                     .phoneNumber(phoneNumber)
@@ -118,8 +136,16 @@ public class WhatsAppWebhookController {
                     .build();
 
                 response = dispatcher.dispatch(followUpRequest);
-                log.debug("Auto-dispatch triggered - empty message from previous handler. NextStep={}", response.getNextStep());
 
+            } catch (Exception e) {
+                log.error("Error in auto-dispatch #{} for {}: {}", autoDispatchCount, phoneNumber, e.getMessage(), e);
+                break;
+            }
+        }
+
+        // Final state update after auto-dispatch loop completes
+        if (autoDispatchCount > 0 && response.getNextStep() != null) {
+            try {
                 if (response.isClearContext()) {
                     stateService.updateStepAndContext(phoneNumber, response.getNextStep(), null);
                 } else if (response.getContextData() != null) {
@@ -128,7 +154,7 @@ public class WhatsAppWebhookController {
                     stateService.updateStep(phoneNumber, response.getNextStep());
                 }
             } catch (Exception e) {
-                log.error("Error in auto-dispatch for {}: {}", phoneNumber, e.getMessage(), e);
+                log.error("Failed to update final state for {}: {}", phoneNumber, e.getMessage(), e);
             }
         }
 

@@ -10,7 +10,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @org.springframework.stereotype.Service
 @RequiredArgsConstructor
@@ -48,6 +50,36 @@ public class AvailabilityService {
         }
         return getAvailableSlotsForBarber(date, service, barberId, fromTime);
     }
+
+    /**
+     * Get available dates for a barber within the next N days
+     * Returns map of LocalDate -> slot count (preserves insertion order)
+     */
+    public Map<LocalDate, Integer> getAvailableDatesForBarber(Service service, Long barberId, int maxDays) {
+        Map<LocalDate, Integer> availableDates = new LinkedHashMap<>();
+        LocalDate today = LocalDate.now();
+
+        for (int i = 0; i < maxDays; i++) {
+            LocalDate date = today.plusDays(i);
+
+            // Skip closed days
+            if (!shopConfig.isOpenOn(date.getDayOfWeek())) {
+                log.debug("Skipping {} - shop is closed on {}", date, date.getDayOfWeek());
+                continue;
+            }
+
+            List<LocalTime> slots = getAvailableSlotsForBarber(service, barberId, date);
+            if (!slots.isEmpty()) {
+                availableDates.put(date, slots.size());
+                log.debug("Date {} has {} available slots for barber {}", date, slots.size(), barberId);
+            }
+        }
+
+        log.info("Found {} available dates for barber {} in next {} days",
+                 availableDates.size(), barberId, maxDays);
+        return availableDates;
+    }
+
     /**
      * Core logic to calculate available slots for specific barber
      */

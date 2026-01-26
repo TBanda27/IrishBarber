@@ -153,7 +153,7 @@ public class ConfirmBookingHandler implements MessageHandler {
     }
 
     private String buildConfirmationPrompt(Service service, Barber barber, LocalDate date, LocalTime time) {
-        String dayLabel = date.equals(LocalDate.now()) ? "TODAY" : "TOMORROW";
+        String dayLabel = getDayLabel(date);
         String formattedDate = date.format(DateTimeFormatter.ofPattern("EEE dd MMM"));
         String formattedTime = time.format(DateTimeFormatter.ofPattern("h:mm a"));
 
@@ -182,7 +182,7 @@ public class ConfirmBookingHandler implements MessageHandler {
 
     private String buildConfirmationMessage(String bookingCode, Service service, Barber barber,
                                            LocalDate date, LocalTime time) {
-        String dayLabel = date.equals(LocalDate.now()) ? "TODAY" : "TOMORROW";
+        String dayLabel = getDayLabel(date);
         String formattedDate = date.format(DateTimeFormatter.ofPattern("EEE dd MMM"));
         String formattedTime = time.format(DateTimeFormatter.ofPattern("h:mm a"));
 
@@ -210,5 +210,16 @@ public class ConfirmBookingHandler implements MessageHandler {
             formattedTime,
             shopConfig.getAddress()
         );
+    }
+
+    private String getDayLabel(LocalDate date) {
+        LocalDate today = LocalDate.now();
+        if (date.equals(today)) {
+            return "TODAY";
+        } else if (date.equals(today.plusDays(1))) {
+            return "TOMORROW";
+        } else {
+            return date.format(DateTimeFormatter.ofPattern("EEEE")).toUpperCase();
+        }
     }
 }

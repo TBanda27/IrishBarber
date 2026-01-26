@@ -104,8 +104,8 @@ public class SelectBarberHandler implements MessageHandler {
             log.info("Customer {} selected barber: {}", request.getPhoneNumber(), selectedBarber.getName());
 
             return HandlerResponse.builder()
-                .message("") // ViewSlotsHandler will show slots
-                .nextStep(ConversationStep.VIEW_TODAY_SLOTS)
+                .message("") // SelectDateHandler will show available dates
+                .nextStep(ConversationStep.SELECT_DATE)
                 .contextData(contextJson)
                 .build();
 

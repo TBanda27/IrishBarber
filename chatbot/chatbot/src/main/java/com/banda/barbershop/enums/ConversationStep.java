@@ -2,7 +2,7 @@ package com.banda.barbershop.enums;
 
 /**
  * State machine for barbershop booking conversation flow
- * Flow: MAIN_MENU → SELECT_SERVICE → SELECT_BARBER → VIEW_SLOTS → CONFIRM_BOOKING → BOOKING_CONFIRMED
+ * Flow: MAIN_MENU → SELECT_SERVICE → SELECT_BARBER → SELECT_DATE → SELECT_TIME → CONFIRM_BOOKING → BOOKING_CONFIRMED
  */
 public enum ConversationStep {
     // Main entry point
@@ -15,8 +15,8 @@ public enum ConversationStep {
     // Booking flow
     SELECT_SERVICE,             // Customer chooses haircut type
     SELECT_BARBER,              // Customer chooses their barber
-    VIEW_TODAY_SLOTS,           // Show available times for today
-    VIEW_TOMORROW_SLOTS,        // Show available times for tomorrow (if today is full)
+    SELECT_DATE,                // Show available dates for next 7 days
+    SELECT_TIME,                // Show available time slots for selected date
     CONFIRM_BOOKING,            // Confirm booking details before saving
     BOOKING_CONFIRMED,          // Booking created successfully
 
@@ -34,8 +34,9 @@ public enum ConversationStep {
             case FAQ -> MAIN_MENU;
             case SELECT_SERVICE -> MAIN_MENU;
             case SELECT_BARBER -> SELECT_SERVICE;
-            case VIEW_TODAY_SLOTS, VIEW_TOMORROW_SLOTS -> SELECT_BARBER;
-            case CONFIRM_BOOKING -> VIEW_TODAY_SLOTS;
+            case SELECT_DATE -> SELECT_BARBER;
+            case SELECT_TIME -> SELECT_DATE;
+            case CONFIRM_BOOKING -> SELECT_TIME;
             case BOOKING_CONFIRMED -> MAIN_MENU;
             case VIEW_MY_BOOKINGS -> MAIN_MENU;
             case CANCEL_BOOKING_INPUT -> VIEW_MY_BOOKINGS;
@@ -49,8 +50,8 @@ public enum ConversationStep {
      */
     public boolean requiresContext() {
         return this == SELECT_BARBER
-            || this == VIEW_TODAY_SLOTS
-            || this == VIEW_TOMORROW_SLOTS
+            || this == SELECT_DATE
+            || this == SELECT_TIME
             || this == CONFIRM_BOOKING
             || this == BOOKING_CONFIRMED
             || this == CANCEL_BOOKING_CONFIRM;

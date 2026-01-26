@@ -88,6 +88,8 @@ twilio:
   account-sid: ${ACCOUNT_SID:test}
   auth-token: ${AUTH_TOKEN:test}
   phone-number: ${TWILIO_NUMBER:test}
+  validation:
+    enabled: false
 
 # Logging
 logging:

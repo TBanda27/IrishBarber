@@ -24,7 +24,9 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class ViewSlotsHandler implements MessageHandler {
+public class SelectTimeHandler implements MessageHandler {
+
+    private static final String[] NUMBER_EMOJIS = {"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"};
 
     private final AvailabilityService availabilityService;
     private final ServiceRepository serviceRepository;
@@ -33,8 +35,7 @@ public class ViewSlotsHandler implements MessageHandler {
 
     @Override
     public boolean canHandle(ConversationStep step) {
-        return step == ConversationStep.VIEW_TODAY_SLOTS ||
-               step == ConversationStep.VIEW_TOMORROW_SLOTS;
+        return step == ConversationStep.SELECT_TIME;
     }
 
     @Override
@@ -43,6 +44,7 @@ public class ViewSlotsHandler implements MessageHandler {
             Map<String, Object> context = parseContext(request.getContextData());
             Long serviceId = ((Number) context.get("service_id")).longValue();
             Long barberId = ((Number) context.get("barber_id")).longValue();
+            LocalDate bookingDate = LocalDate.parse((String) context.get("booking_date"));
 
             Service service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new IllegalStateException("Service not found"));
@@ -50,37 +52,23 @@ public class ViewSlotsHandler implements MessageHandler {
             Barber barber = barberRepository.findById(barberId)
                 .orElseThrow(() -> new IllegalStateException("Barber not found"));
 
-            boolean isToday = request.getCurrentStep() == ConversationStep.VIEW_TODAY_SLOTS;
-
-            LocalDate targetDate = isToday ? LocalDate.now() : LocalDate.now().plusDays(1);
+            // Get available slots for the selected date
             List<LocalTime> availableSlots = availabilityService.getAvailableSlotsForBarber(
-                service, barberId, targetDate);
+                service, barberId, bookingDate);
 
-            // If no slots available for today, automatically show tomorrow
-            if (isToday && availableSlots.isEmpty()) {
-                log.info("No slots available today, showing tomorrow's slots");
+            // If no slots available (edge case - date became fully booked)
+            if (availableSlots.isEmpty()) {
                 return HandlerResponse.builder()
-                    .message("")
-                    .nextStep(ConversationStep.VIEW_TOMORROW_SLOTS)
+                    .message("❌ Sorry, this date just became fully booked.\n\n" +
+                            "Let's pick another date.\n\n" +
+                            "0️⃣ Main Menu")
+                    .nextStep(ConversationStep.SELECT_DATE)
                     .contextData(request.getContextData())
                     .build();
             }
 
-            // If no slots for tomorrow either
-            if (!isToday && availableSlots.isEmpty()) {
-                return HandlerResponse.builder()
-                    .message("❌ Sorry, we're fully booked for today and tomorrow.\n\n" +
-                            "Please call us or try again tomorrow for next-day bookings.\n\n" +
-                            "0️⃣ Main Menu")
-                    .nextStep(ConversationStep.MAIN_MENU)
-                    .clearContext(true)
-                    .build();
-            }
-
-            // Handle user input (slot selection or MORE)
+            // Handle menu command
             String userInput = request.getUserInput().toUpperCase().trim();
-
-            // Check for menu command
             if ("MENU".equals(userInput) || "0".equals(userInput)) {
                 return HandlerResponse.builder()
                     .message("")
@@ -89,40 +77,46 @@ public class ViewSlotsHandler implements MessageHandler {
                     .build();
             }
 
-            if ("MORE".equals(userInput) && isToday) {
+            // Handle BACK command to go back to date selection
+            if ("BACK".equals(userInput)) {
+                context.remove("booking_date");
+                String contextJson = objectMapper.writeValueAsString(context);
                 return HandlerResponse.builder()
                     .message("")
-                    .nextStep(ConversationStep.VIEW_TOMORROW_SLOTS)
-                    .contextData(request.getContextData())
+                    .nextStep(ConversationStep.SELECT_DATE)
+                    .contextData(contextJson)
                     .build();
             }
 
+            // Handle time slot selection
             Integer choice = request.getParsedChoice();
             if (choice != null && choice >= 1 && choice <= availableSlots.size()) {
                 LocalTime selectedTime = availableSlots.get(choice - 1);
 
-                // Update context with selected date and time
-                context.put("booking_date", targetDate.toString());
+                // Store selected time in context
                 context.put("booking_time", selectedTime.toString());
                 String contextJson = objectMapper.writeValueAsString(context);
 
+                log.info("Customer {} selected time: {} on {}",
+                    request.getPhoneNumber(), selectedTime, bookingDate);
+
                 return HandlerResponse.builder()
-                    .message("")
+                    .message("") // ConfirmBookingHandler will show confirmation
                     .nextStep(ConversationStep.CONFIRM_BOOKING)
                     .contextData(contextJson)
                     .build();
             }
 
-            // Show slots menu
-            String message = buildSlotsMessage(service, barber, availableSlots, targetDate, isToday);
+            // Show time slots menu
+            String message = buildTimeSlotsMenu(service, barber, bookingDate, availableSlots);
             return HandlerResponse.builder()
                 .message(message)
-                .nextStep(request.getCurrentStep())
+                .nextStep(ConversationStep.SELECT_TIME)
                 .contextData(request.getContextData())
                 .build();
 
         } catch (Exception e) {
-            log.error("Error in ViewSlotsHandler", e);
+            log.error("Error in SelectTimeHandler", e);
             return HandlerResponse.builder()
                 .message("⚠️ Something went wrong. Let's start over.\n\n0️⃣ Main Menu")
                 .nextStep(ConversationStep.MAIN_MENU)
@@ -133,7 +127,7 @@ public class ViewSlotsHandler implements MessageHandler {
 
     @Override
     public ConversationStep getHandledStep() {
-        return ConversationStep.VIEW_TODAY_SLOTS;
+        return ConversationStep.SELECT_TIME;
     }
 
     private Map<String, Object> parseContext(String contextData) throws Exception {
@@ -143,35 +137,38 @@ public class ViewSlotsHandler implements MessageHandler {
         return objectMapper.readValue(contextData, new TypeReference<>() {});
     }
 
-    private String buildSlotsMessage(Service service, Barber barber, List<LocalTime> slots,
-                                     LocalDate date, boolean isToday) {
+    private String buildTimeSlotsMenu(Service service, Barber barber,
+                                       LocalDate date, List<LocalTime> slots) {
         StringBuilder message = new StringBuilder();
 
         message.append(String.format("🪒 *%s* with *%s*\n\n", service.getName(), barber.getName()));
 
-        String dayLabel = isToday ? "TODAY" : "TOMORROW";
-        String formattedDate = date.format(DateTimeFormatter.ofPattern("EEE dd MMM"));
-
-        if (isToday && slots.isEmpty()) {
-            message.append(String.format("❌ Sorry, we're fully booked %s\n\n", dayLabel));
-            message.append("Type MORE to see tomorrow's availability");
-            return message.toString();
-        }
-
-        message.append(String.format("📅 *%s (%s)*:\n", dayLabel, formattedDate));
+        String dayLabel = getDayLabel(date);
+        String formattedDate = date.format(DateTimeFormatter.ofPattern("dd MMM"));
+        message.append(String.format("🕐 *Available Times for %s (%s):*\n\n", dayLabel, formattedDate));
 
         for (int i = 0; i < slots.size(); i++) {
             LocalTime slot = slots.get(i);
             String formattedTime = slot.format(DateTimeFormatter.ofPattern("h:mm a"));
-            message.append(String.format("%d️⃣ %s\n", i + 1, formattedTime));
+            String emoji = i < NUMBER_EMOJIS.length ? NUMBER_EMOJIS[i] : (i + 1) + "️⃣";
+            message.append(String.format("%s %s\n", emoji, formattedTime));
         }
 
-        message.append("\nType number to book");
-        if (isToday) {
-            message.append(" or MORE for tomorrow");
-        }
+        message.append("\nReply with a number to book");
+        message.append("\nType BACK to select a different date");
         message.append("\n0️⃣ Main Menu");
 
         return message.toString();
+    }
+
+    private String getDayLabel(LocalDate date) {
+        LocalDate today = LocalDate.now();
+        if (date.equals(today)) {
+            return "Today";
+        } else if (date.equals(today.plusDays(1))) {
+            return "Tomorrow";
+        } else {
+            return date.format(DateTimeFormatter.ofPattern("EEEE"));
+        }
     }
 }
